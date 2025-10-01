@@ -1,52 +1,62 @@
 // app/githubusers/[user]/page.jsx
-import Repos from "../../components/Repos"; // Optional if you use separate component
+import React from "react";
+import Link from "next/link";
 
-const fetchUserRepos = async (user) => {
-  try {
-    const res = await fetch(`https://api.github.com/users/${user}/repos`, {
-      headers: {
-        Authorization: `token ${process.env.GITHUB_TOKEN}`
-      }
-    });
-
-    if (!res.ok) {
-      console.error("GitHub API error:", res.status);
-      return [];
-    }
-
-    const json = await res.json();
-    return json;
-  } catch (err) {
-    console.error("Fetch error:", err);
-    return [];
-  }
+type Repo = {
+  id: number;
+  name: string;
+  description: string | null;
+  html_url: string;
 };
 
-const UserReposPage = async ({ params: { user } }) => {
-  const repos = await fetchUserRepos(user);
+const UserReposPage = async ({ params }: { params: { user: string } }) => {
+  const { user } = params;
+
+  // Fetch user repos from GitHub
+  const res = await fetch(`https://api.github.com/users/${user}/repos`);
+  
+  if (!res.ok) {
+    console.error("GitHub API error:", res.status);
+    return <div>Error fetching repos for {user}</div>;
+  }
+
+  const repos: Repo[] = await res.json();
 
   return (
     <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">{user}'s Repositories</h2>
+      <h1 className="text-2xl font-bold mb-4">{user}'s Repositories</h1>
       {repos.length === 0 ? (
-        <p>No repos found.</p>
+        <p>No repositories found.</p>
       ) : (
-        <ul className="space-y-2">
-          {repos.map((repo) => (
-            <li key={repo.id} className="border p-2 rounded shadow-sm">
-              <a
-                href={repo.html_url}
-                target="_blank"
-                className="text-blue-500 underline"
-              >
-                {repo.name}
-              </a>
-              <p className="text-sm opacity-70">
-                {repo.description || "No description"}
-              </p>
-            </li>
-          ))}
-        </ul>
+        <div className="overflow-x-auto">
+          <table className="table w-full">
+            <thead>
+              <tr>
+                <th>Repo Name</th>
+                <th>Description</th>
+                <th>Link</th>
+              </tr>
+            </thead>
+            <tbody>
+              {repos.map((repo) => (
+                <tr key={repo.id}>
+                  <td>{repo.name}</td>
+                  <td>{repo.description || "No description"}</td>
+                  <td>
+                    <Link
+                      href={repo.html_url}
+                      className="btn btn-link"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      View on GitHub
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );
