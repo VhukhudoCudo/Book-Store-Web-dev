@@ -1,4 +1,4 @@
-import { prisma } from "../../../../db";  // Adjust path as needed
+import { prisma } from '../../../db'; // Adjust relative path as needed
 import { NextResponse } from "next/server";
 
 export async function GET(req) {
